@@ -1,0 +1,14 @@
+/* Kill the fake iPhone status bar (time / signal / battery / notch). */
+.statusbar,
+.statusbar .sig,
+.statusbar .dotbar,
+.bat {
+  display: none !important;
+  height: 0 !important;
+  overflow: hidden !important;
+}
+.phone::before,
+.phone::after {
+  content: none !important;
+  display: none !important;
+}
