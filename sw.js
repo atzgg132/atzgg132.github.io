@@ -1,4 +1,4 @@
-const CACHE = "yatra-pwa-v4";
+const CACHE = "yatra-pwa-v5";
 const PRECACHE = [
   "./",
   "./index.html",
