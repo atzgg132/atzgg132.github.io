@@ -17,7 +17,32 @@
   <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png" />
-  <link rel="stylesheet" href="css/app.css?v=5" />
+  <link rel="apple-touch-icon" sizes="192x192" href="assets/icons/icon-192.png" />
+  <link rel="stylesheet" href="css/app.css?v=7" />
+  <script>
+    (function () {
+      var B = "7";
+      try {
+        if (localStorage.getItem("yatra.build") === B) return;
+        localStorage.setItem("yatra.build", B);
+      } catch (e) { return; }
+      var left = 1;
+      function done() { if (--left <= 0) location.reload(); }
+      if (navigator.serviceWorker) {
+        left++;
+        navigator.serviceWorker.getRegistrations()
+          .then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); })
+          .then(done, done);
+      }
+      if (window.caches) {
+        left++;
+        caches.keys()
+          .then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); })
+          .then(done, done);
+      }
+      done();
+    })();
+  </script>
 </head>
 <body>
   <div class="stage">
@@ -30,6 +55,6 @@
       </div>
     </div>
   </div>
-  <script type="module" src="js/app.js?v=5"></script>
+  <script type="module" src="js/app.js?v=7"></script>
 </body>
 </html>
