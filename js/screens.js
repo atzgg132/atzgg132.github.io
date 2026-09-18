@@ -1,6 +1,6 @@
 import {
   ICONS, DIYA_AVATAR, store, booking, requireAuth, navBar, iconBtn,
-  productIcon, screenClass, INR, airlineMark,
+  productIcon, screenClass, INR, airlineMark, formatStamp,
 } from './core.js';
 
 export function viewLogin() {
@@ -21,6 +21,7 @@ export function viewLogin() {
         <p class="fine">By continuing you agree to Yatra’s <b>Terms of Use</b> and <b>Privacy Policy</b>. An OTP will be sent to verify this number.</p>
         <button class="btn btn-red" id="get-otp" type="submit" disabled>Get OTP</button>
         <button class="btn btn-ghost" type="button" data-act="skip" style="margin-top:10px">Skip for now</button>
+        <button class="btn btn-ghost" type="button" data-act="install" style="margin-top:10px">Add to Home Screen</button>
       </form>
     </div>
   </div>`;
@@ -30,7 +31,7 @@ export function viewOtp() {
   const m = store.otp.mobile;
   const masked = m.length > 4 ? m.slice(0, 2) + "••••" + m.slice(-2) : m;
   const boxes = Array.from({ length: 6 }, (_, i) =>
-    `<input class="otp-d" inputmode="numeric" maxlength="1" data-i="${i}" aria-label="Digit ${i + 1}" />`
+    `<input class="otp-d" inputmode="numeric" maxlength="1" data-i="${i}" aria-label="Digit ${i + 1}"${i === 0 ? ' autocomplete="one-time-code"' : ""} />`
   ).join("");
   return `<div class="${screenClass()}">
     <div class="scroll no-tab auth">
@@ -43,6 +44,7 @@ export function viewOtp() {
       </div>
       <form class="auth-form" id="otp-form">
         <div class="otp-boxes" id="otp-boxes">${boxes}</div>
+        <p class="fine" style="margin-top:8px">Use OTP <b>000000</b> — this only unlocks Your Trips.</p>
         <div class="err" id="otp-err"></div>
         <div class="otp-meta">
           <span class="wait" id="otp-wait">Resend OTP in 0:30</span>
@@ -304,7 +306,7 @@ export function viewBooking() {
         <div class="refund-box">
           <h4>Refund Details</h4>
           <div class="kv"><span>Transaction Id</span><span class="mono">${r.transactionId}</span></div>
-          <div class="kv"><span>Transaction Date</span><span>${r.transactionDate}</span></div>
+          <div class="kv"><span>Transaction Date</span><span>${formatStamp(r.transactionDate)}</span></div>
           <div class="kv"><span>Refund Mode</span><span>${r.mode}</span></div>
           <div class="kv"><span>CardType</span><span>${r.cardType}</span></div>
           <div class="kv amt"><span>REFUND AMOUNT</span><span>${INR(r.amount, 2)}</span></div>
