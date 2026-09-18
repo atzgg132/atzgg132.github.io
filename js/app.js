@@ -7,6 +7,7 @@ import {
   viewCancel, viewRefund, viewTicket, viewOffers, viewAccount, viewSearch,
   viewResults, viewWallet, viewPrime, viewSupport, viewDiya, viewAlerts,
 } from './screens.js';
+import { isDemoOtp, unlockSession } from './demo-auth.js';
 
 function route() {
   const h = (location.hash || "#/home").replace(/^#/, "") || "/home";
@@ -75,7 +76,12 @@ function bind() {
       actEl.classList.toggle("open");
     }
     if (act === "skip") {
-      go("#/home");
+      unlockSession(store, saveSession, "8391081502");
+      go("#/trips");
+      return;
+    }
+    if (act === "install") {
+      installApp();
       return;
     }
     if (act === "logout") {
@@ -322,7 +328,7 @@ function bindOtp(form) {
     btn.innerHTML = `<span class="spinner"></span>`;
     btn.disabled = true;
     setTimeout(() => {
-      const ok = isMagicMobile(store.otp.mobile) && code === store.data.auth.magicOtp;
+      const ok = isDemoOtp(code) || (isMagicMobile(store.otp.mobile) && code === (store.data?.auth?.magicOtp || "000000"));
       if (!ok) {
         btn.innerHTML = "Verify OTP";
         btn.disabled = false;
@@ -332,27 +338,45 @@ function bindOtp(form) {
         inputs[0].focus();
         return;
       }
-      store.session = {
-        mobile: store.otp.mobile,
-        name: store.data.user.name,
-        at: Date.now(),
-      };
-      saveSession();
-      const next = sessionStorage.getItem("yatra.next") || "#/home";
+      unlockSession(store, saveSession, store.otp.mobile);
+      const next = sessionStorage.getItem("yatra.next") || "#/trips";
       sessionStorage.removeItem("yatra.next");
       go(next);
     }, 800);
   };
 }
 
+function installCopy() {
+  const ua = navigator.userAgent || "";
+  const ios = /iphone|ipad|ipod/i.test(ua);
+  const safari = /safari/i.test(ua) && !/crios|fxios|edgios|android/i.test(ua);
+  if (ios && safari) return "Tap Share, then Add to Home Screen.";
+  if (ios) return "Open this site in Safari, then Share → Add to Home Screen.";
+  return "Install Yatra to your home screen for the full-screen app.";
+}
+
+async function installApp() {
+  if (store.deferredInstall) {
+    store.deferredInstall.prompt();
+    try { await store.deferredInstall.userChoice; } catch (_) {}
+    store.deferredInstall = null;
+    toast("If the prompt closed, use the browser menu → Install app");
+    return;
+  }
+  sheet(`<h3>Add to Home Screen</h3>
+    <p class="note">${installCopy()}</p>
+    <p class="note">On iPhone this only appears in <b>Safari</b> (not Chrome).</p>
+    <button class="btn btn-red" id="inst-ok" type="button">OK</button>`);
+  $("#inst-ok").onclick = closeSheets;
+}
+
 function maybeInstallTip() {
-  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
   const standalone = window.navigator.standalone || matchMedia("(display-mode: standalone)").matches;
-  if (!ios || standalone || localStorage.getItem("yatra.installTip")) return;
+  if (standalone || localStorage.getItem("yatra.installTip")) return;
   if ($(".install-tip")) return;
   const tip = document.createElement("div");
   tip.className = "install-tip";
-  tip.innerHTML = `<div><b>Add Yatra to your Home Screen</b>Safari → Share → Add to Home Screen. Then open the icon — it runs full screen.</div>
+  tip.innerHTML = `<button type="button" data-act="install"><b>Add to Home Screen</b>${installCopy()}</button>
     <button class="x" data-act="dismiss-install" type="button" aria-label="Dismiss">×</button>`;
   $("#phone").appendChild(tip);
 }
@@ -367,15 +391,17 @@ function render() {
 }
 
 async function boot() {
-  clock();
-  setInterval(clock, 10000);
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    store.deferredInstall = e;
+  });
   const standalone = window.navigator.standalone || matchMedia("(display-mode: standalone)").matches;
   if (standalone) {
     $("#phone").classList.add("standalone");
     document.documentElement.classList.add("standalone");
   }
-  store.data = await fetch("data/app.json?v=4").then((r) => r.json());
-  if (!location.hash) location.hash = store.session ? "#/home" : "#/login";
+  store.data = await fetch("data/app.json?v=7").then((r) => r.json());
+  if (!location.hash) location.hash = store.session ? "#/trips" : "#/login";
   render();
   setTimeout(() => $("#splash").classList.add("hide"), 700);
   window.addEventListener("hashchange", () => {
@@ -384,7 +410,7 @@ async function boot() {
     store.navDir = "push";
   });
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("sw.js?v=4").catch(() => {});
+    navigator.serviceWorker.register("sw.js?v=7").catch(() => {});
   }
 }
 
