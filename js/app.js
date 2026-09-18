@@ -1,1 +1,1 @@
-PLACEHOLDER_APP
+LOAD_FROM_DISK:/home/ubuntu/yatra-pwa/js/app.js

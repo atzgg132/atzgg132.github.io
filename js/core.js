@@ -1,1 +1,1 @@
-PLACEHOLDER_CORE
+LOAD_FROM_DISK:/home/ubuntu/yatra-pwa/js/core.js
